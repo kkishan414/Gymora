@@ -24,7 +24,7 @@ class AuthService:
                 access_token = utility.create_access_token(db_user["username"],db_user["user_id"],db_user["email"],timedelta(minutes=20))
                 refresh_token = utility.create_refresh_token()
                 refresh_token_hash = utility.hash_refresh_token(refresh_token)
-
+                print(refresh_token_hash)
                 session = RefreshSession(
                     user_id= db_user["user_id"],
                     username=db_user["username"],
@@ -86,13 +86,19 @@ class AuthService:
         
     async def refresh_access_token(self,refresh_token:str):
         hash_token = utility.hash_refresh_token(refresh_token)
+        print(hash_token)
         session = await self.refresh_repo.get_session_by_hash(hash_token)
         if not session:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid Refresh Token"
             )
-        elif (datetime.now(UTC) >= session["expires_at"]):
+        elif (session["is_revoked"] == True):
+            raise HTTPException(
+                status_code=401,
+                detail="Refresh token expired"
+            )
+        elif ( (datetime.now(UTC) >= session["expires_at"].replace(tzinfo=UTC)) ):
             await self.refresh_repo.revoke_session(hash_token)
             raise HTTPException(
                 status_code=401,
@@ -106,4 +112,14 @@ class AuthService:
                 "token_type":"bearer"
             }
 
+    async def logout_user(self,refresh_token:str):
+        hash_token = utility.hash_refresh_token(refresh_token)
+        session = await self.refresh_repo.get_session_by_hash(hash_token)
+        if not session:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid Refresh Token"
+            )
+        await self.refresh_repo.revoke_session(hash_token)
+        
             

@@ -6,6 +6,7 @@ from app.services.auth_service import AuthService
 from app.models.user_credentials import Token
 from typing import Annotated
 from app.schemas.login_request import LoginRequest
+from app.schemas.logout_request import LogoutRequest
 
 router = APIRouter(
     prefix="/auth",
@@ -38,8 +39,11 @@ async def verify_token(current_user = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/refresh/")
+@router.post("/refresh")
 async def refresh_session(request: RefreshTokenRequest,auth_service: AuthService = Depends(get_auth_service)):
     return await auth_service.refresh_access_token(request.refresh_token)
 
 
+@router.post("/logout")
+async def logout(request: LogoutRequest,auth_service: AuthService = Depends(get_auth_service)):
+    return await auth_service.logout_user(request.refresh_token)

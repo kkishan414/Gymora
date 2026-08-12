@@ -18,3 +18,5 @@ class RefreshSessionRepository:
             {"token_hash": token_hash},
             {"$set": {"is_revoked": True}}
         )
+
+    
