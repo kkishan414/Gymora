@@ -4,6 +4,7 @@ from datetime import timedelta,datetime,timezone
 from app.core.config import settings
 from jose import jwt,JWTError
 import secrets
+import hashlib
 
 def generate_user_id():
     return f"USR_{uuid.uuid4().hex[:12]}"
@@ -44,6 +45,5 @@ def create_refresh_token():
     return secrets.token_urlsafe(64)
 
 def hash_refresh_token(token:str):
-    bcrypt_context = CryptContext(schemes=['bcrypt'],deprecated='auto')
-    return bcrypt_context.hash(token)
+    return hashlib.sha256(token.encode()).hexdigest()
 
